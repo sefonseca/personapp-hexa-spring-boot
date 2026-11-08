@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.MongoWriteException;
 
@@ -24,6 +27,9 @@ public class PersonOutputAdapterMongo implements PersonOutputPort {
 	
 	@Autowired
 	private PersonaMapperMongo personaMapperMongo;
+
+	@Autowired
+	private MongoTemplate mongoTemplate;
 	
 	@Override
 	public Person save(Person person) {
@@ -40,6 +46,10 @@ public class PersonOutputAdapterMongo implements PersonOutputPort {
 	@Override
 	public Boolean delete(Integer identification) {
 		log.debug("Into delete on Adapter MongoDB");
+		// MongoDB no tiene integridad referencial: se eliminan en cascada los
+		// telefonos y estudios de la persona (igual que CascadeType.ALL en MariaDB)
+		mongoTemplate.remove(Query.query(Criteria.where("primaryDuenio").is(identification)), "telefono");
+		mongoTemplate.remove(Query.query(Criteria.where("primaryPersona").is(identification)), "estudios");
 		personaRepositoryMongo.deleteById(identification);
 		return personaRepositoryMongo.findById(identification).isEmpty();
 	}
