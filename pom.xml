@@ -10,15 +10,17 @@
 	<description>App Hexagonal (Clean Architecture) Multi Module PersonAPP</description>
 	<packaging>pom</packaging>
 	<properties>
-		<maven.compiler.source>${global.java.version}</maven.compiler.source>
-		<maven.compiler.target>${global.java.version}</maven.compiler.target>
+		<maven.compiler.release>${global.java.version}</maven.compiler.release>
 		<java.version>${global.java.version}</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<revision>0.0.1-SNAPSHOT</revision>
-		<global.java.version>11</global.java.version>
-		<global.springframework.boot.version>2.7.11</global.springframework.boot.version>
-		<global.springframework.version>5.3.27</global.springframework.version>
+		<!-- Versiones LTS / estables vigentes -->
+		<global.java.version>25</global.java.version>
+		<global.springframework.boot.version>4.1.2</global.springframework.boot.version>
+		<global.lombok.version>1.18.48</global.lombok.version>
+		<global.springdoc.version>3.2.0</global.springdoc.version>
+		<global.maven.compiler.version>3.16.0</global.maven.compiler.version>
 	</properties>
 	<licenses>
 		<license>
@@ -43,17 +45,62 @@
 		<module>rest-input-adapter</module>
 		<module>cli-input-adapter</module>
 	</modules>
+	<!-- El BOM de Spring Boot fija versiones compatibles entre si para todas las
+	     dependencias (Spring Framework, Hibernate, drivers, Jackson, etc.) -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${global.springframework.boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.26</version>
+			<version>${global.lombok.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-to-slf4j</artifactId>
-			<version>2.20.0</version>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 		</dependency>
 	</dependencies>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<version>${global.springframework.boot.version}</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<plugins>
+			<!-- Desde JDK 23 los procesadores de anotaciones no se ejecutan
+			     automaticamente: se declara Lombok de forma explicita -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${global.maven.compiler.version}</version>
+				<configuration>
+					<release>${global.java.version}</release>
+					<!-- Spring 6.1+ ya no deduce nombres de parametros sin -parameters
+					     (lo hacia el spring-boot-starter-parent, que este proyecto no usa) -->
+					<parameters>true</parameters>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${global.lombok.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

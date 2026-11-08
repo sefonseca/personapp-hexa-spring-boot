@@ -2,16 +2,15 @@ package co.edu.javeriana.as.personapp.mariadb.entity;
 
 import java.io.Serializable;
 import java.util.List;
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 /**
  *
@@ -32,8 +31,7 @@ public class ProfesionEntity implements Serializable {
 	@Basic(optional = false)
 	@Column(nullable = false, length = 90)
 	private String nom;
-	@Lob
-	@Column(length = 65535)
+	@Column(columnDefinition = "TEXT")
 	private String des;
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "profesion")
 	private List<EstudiosEntity> estudios;
