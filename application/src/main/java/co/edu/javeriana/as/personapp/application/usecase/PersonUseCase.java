@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import co.edu.javeriana.as.personapp.application.port.in.PersonInputPort;
 import co.edu.javeriana.as.personapp.application.port.out.PersonOutputPort;
 import co.edu.javeriana.as.personapp.common.annotations.UseCase;
+import co.edu.javeriana.as.personapp.common.exceptions.AlreadyExistException;
 import co.edu.javeriana.as.personapp.common.exceptions.NoExistException;
 import co.edu.javeriana.as.personapp.domain.Person;
 import co.edu.javeriana.as.personapp.domain.Phone;
@@ -30,16 +31,21 @@ public class PersonUseCase implements PersonInputPort {
 	}
 
 	@Override
-	public Person create(Person person) {
+	public Person create(Person person) throws AlreadyExistException {
 		log.debug("Into create on Application Domain");
+		if (personPersintence.findById(person.getIdentification()) != null)
+			throw new AlreadyExistException(
+					"The person with id " + person.getIdentification() + " already exists into db, cannot be created");
 		return personPersintence.save(person);
 	}
 
 	@Override
 	public Person edit(Integer identification, Person person) throws NoExistException {
 		Person oldPerson = personPersintence.findById(identification);
-		if (oldPerson != null)
+		if (oldPerson != null) {
+			person.setIdentification(identification);
 			return personPersintence.save(person);
+		}
 		throw new NoExistException(
 				"The person with id " + identification + " does not exist into db, cannot be edited");
 	}

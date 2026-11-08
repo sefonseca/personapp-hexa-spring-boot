@@ -37,8 +37,27 @@ public class PersonaMapperMaria {
 		return personaEntity;
 	}
 
+	/**
+	 * Construye la entidad solo con sus atributos simples (sin telefonos ni
+	 * estudios). Se usa desde los mappers de Telefono y Estudios para no entrar en
+	 * recursion infinita Persona -> Telefono -> Persona -> ...
+	 */
+	public PersonaEntity fromDomainToAdapterBasic(Person person) {
+		PersonaEntity personaEntity = new PersonaEntity();
+		personaEntity.setCc(person.getIdentification());
+		personaEntity.setNombre(person.getFirstName());
+		personaEntity.setApellido(person.getLastName());
+		personaEntity.setGenero(validateGenero(person.getGender()));
+		personaEntity.setEdad(validateEdad(person.getAge()));
+		return personaEntity;
+	}
+
 	private Character validateGenero(@NonNull Gender gender) {
-		return gender == Gender.FEMALE ? 'F' : gender == Gender.MALE ? 'M' : ' ';
+		// La columna genero es ENUM('M','F'): el valor ' ' que se enviaba para OTHER
+		// era rechazado por MariaDB.
+		if (gender == Gender.OTHER)
+			throw new IllegalArgumentException("Gender OTHER is not supported by the data model, use M or F");
+		return gender == Gender.FEMALE ? 'F' : 'M';
 	}
 
 	private Integer validateEdad(Integer age) {
@@ -69,8 +88,22 @@ public class PersonaMapperMaria {
 		return person;
 	}
 
+	/**
+	 * Construye el objeto de dominio solo con sus atributos simples (sin telefonos
+	 * ni estudios) para evitar la recursion infinita entre mappers.
+	 */
+	public Person fromAdapterToDomainBasic(PersonaEntity personaEntity) {
+		Person person = new Person();
+		person.setIdentification(personaEntity.getCc());
+		person.setFirstName(personaEntity.getNombre());
+		person.setLastName(personaEntity.getApellido());
+		person.setGender(validateGender(personaEntity.getGenero()));
+		person.setAge(validateAge(personaEntity.getEdad()));
+		return person;
+	}
+
 	private @NonNull Gender validateGender(Character genero) {
-		return genero == 'F' ? Gender.FEMALE : genero == 'M' ? Gender.MALE : Gender.OTHER;
+		return genero == null ? Gender.OTHER : genero == 'F' ? Gender.FEMALE : genero == 'M' ? Gender.MALE : Gender.OTHER;
 	}
 
 	private Integer validateAge(Integer edad) {

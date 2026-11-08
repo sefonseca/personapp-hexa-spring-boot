@@ -37,8 +37,22 @@ public class PersonaMapperMongo {
 		return personaDocument;
 	}
 
+	/**
+	 * Documento solo con atributos simples. Lo usan los mappers de Telefono y
+	 * Estudios para no caer en recursion infinita Persona -> Telefono -> Persona.
+	 */
+	public PersonaDocument fromDomainToAdapterBasic(Person person) {
+		PersonaDocument personaDocument = new PersonaDocument();
+		personaDocument.setId(person.getIdentification());
+		personaDocument.setNombre(person.getFirstName());
+		personaDocument.setApellido(person.getLastName());
+		personaDocument.setGenero(validateGenero(person.getGender()));
+		personaDocument.setEdad(validateEdad(person.getAge()));
+		return personaDocument;
+	}
+
 	private String validateGenero(@NonNull Gender gender) {
-		return gender == Gender.FEMALE ? "F" : gender == Gender.MALE ? "M" : " ";
+		return gender == Gender.FEMALE ? "F" : gender == Gender.MALE ? "M" : "O";
 	}
 
 	private Integer validateEdad(Integer age) {
@@ -66,6 +80,20 @@ public class PersonaMapperMongo {
 		person.setAge(validateAge(personaDocument.getEdad()));
 		person.setStudies(validateStudies(personaDocument.getEstudios()));
 		person.setPhoneNumbers(validatePhones(personaDocument.getTelefonos()));
+		return person;
+	}
+
+	/**
+	 * Dominio solo con atributos simples (sin telefonos ni estudios) para evitar
+	 * la recursion infinita entre mappers.
+	 */
+	public Person fromAdapterToDomainBasic(PersonaDocument personaDocument) {
+		Person person = new Person();
+		person.setIdentification(personaDocument.getId());
+		person.setFirstName(personaDocument.getNombre());
+		person.setLastName(personaDocument.getApellido());
+		person.setGender(validateGender(personaDocument.getGenero()));
+		person.setAge(validateAge(personaDocument.getEdad()));
 		return person;
 	}
 

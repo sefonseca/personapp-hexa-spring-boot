@@ -37,6 +37,30 @@ public class ProfesionMapperMaria {
 				: new ArrayList<EstudiosEntity>();
 	}
 
+	/**
+	 * Entidad sin la lista de estudios (evita recursion Profesion -> Estudio ->
+	 * Profesion).
+	 */
+	public ProfesionEntity fromDomainToAdapterBasic(Profession profession) {
+		ProfesionEntity profesionEntity = new ProfesionEntity();
+		profesionEntity.setId(profession.getIdentification());
+		profesionEntity.setNom(profession.getName());
+		profesionEntity.setDes(validateDes(profession.getDescription()));
+		return profesionEntity;
+	}
+
+	/**
+	 * Dominio sin la lista de estudios (evita recursion Profesion -> Estudio ->
+	 * Profesion).
+	 */
+	public Profession fromAdapterToDomainBasic(ProfesionEntity profesionEntity) {
+		Profession profession = new Profession();
+		profession.setIdentification(profesionEntity.getId());
+		profession.setName(profesionEntity.getNom());
+		profession.setDescription(validateDescription(profesionEntity.getDes()));
+		return profession;
+	}
+
 	public Profession fromAdapterToDomain(ProfesionEntity profesionEntity) {
 		Profession profession = new Profession();
 		profession.setIdentification(profesionEntity.getId());

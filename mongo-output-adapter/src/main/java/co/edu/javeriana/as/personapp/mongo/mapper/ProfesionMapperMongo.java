@@ -37,6 +37,30 @@ public class ProfesionMapperMongo {
 				: new ArrayList<EstudiosDocument>();
 	}
 
+	/**
+	 * Documento sin la lista de estudios (evita recursion Profesion -> Estudio ->
+	 * Profesion).
+	 */
+	public ProfesionDocument fromDomainToAdapterBasic(Profession profession) {
+		ProfesionDocument profesionDocument = new ProfesionDocument();
+		profesionDocument.setId(profession.getIdentification());
+		profesionDocument.setNom(profession.getName());
+		profesionDocument.setDes(validateDes(profession.getDescription()));
+		return profesionDocument;
+	}
+
+	/**
+	 * Dominio sin la lista de estudios (evita recursion Profesion -> Estudio ->
+	 * Profesion).
+	 */
+	public Profession fromAdapterToDomainBasic(ProfesionDocument profesionDocument) {
+		Profession profession = new Profession();
+		profession.setIdentification(profesionDocument.getId());
+		profession.setName(profesionDocument.getNom());
+		profession.setDescription(validateDescription(profesionDocument.getDes()));
+		return profession;
+	}
+
 	public Profession fromAdapterToDomain(ProfesionDocument profesionDocument) {
 		Profession profession = new Profession();
 		profession.setIdentification(profesionDocument.getId());

@@ -26,6 +26,9 @@ public class EstudiosMapperMaria {
 		estudioPK.setIdProf(study.getProfession().getIdentification());
 		EstudiosEntity estudio = new EstudiosEntity();
 		estudio.setEstudiosPK(estudioPK);
+		// Se asignan tambien las relaciones para que la entidad quede completa
+		estudio.setPersona(personaMapperMaria.fromDomainToAdapterBasic(study.getPerson()));
+		estudio.setProfesion(profesionMapperMaria.fromDomainToAdapterBasic(study.getProfession()));
 		estudio.setFecha(validateFecha(study.getGraduationDate()));
 		estudio.setUniver(validateUniver(study.getUniversityName()));
 		return estudio;
@@ -43,15 +46,21 @@ public class EstudiosMapperMaria {
 
 	public Study fromAdapterToDomain(EstudiosEntity estudiosEntity) {
 		Study study = new Study();
-		study.setPerson(personaMapperMaria.fromAdapterToDomain(estudiosEntity.getPersona()));
-		study.setProfession(profesionMapperMaria.fromAdapterToDomain(estudiosEntity.getProfesion()));
+		study.setPerson(personaMapperMaria.fromAdapterToDomainBasic(estudiosEntity.getPersona()));
+		study.setProfession(profesionMapperMaria.fromAdapterToDomainBasic(estudiosEntity.getProfesion()));
 		study.setGraduationDate(validateGraduationDate(estudiosEntity.getFecha()));
 		study.setUniversityName(validateUniversityName(estudiosEntity.getUniver()));
-		return null;
+		return study;
 	}
 
 	private LocalDate validateGraduationDate(Date fecha) {
-		return fecha != null ? fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
+		if (fecha == null)
+			return null;
+		// Hibernate entrega un java.sql.Date para @Temporal(DATE), y
+		// java.sql.Date.toInstant() lanza UnsupportedOperationException
+		if (fecha instanceof java.sql.Date sqlDate)
+			return sqlDate.toLocalDate();
+		return fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 	}
 
 	private String validateUniversityName(String univer) {
