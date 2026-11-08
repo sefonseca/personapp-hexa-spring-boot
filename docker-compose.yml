@@ -1,0 +1,75 @@
+services:
+
+  mariadb:
+    image: mariadb:12.3
+    container_name: personapp-mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./scripts/persona_ddl_maria.sql:/docker-entrypoint-initdb.d/01_persona_ddl_maria.sql:ro
+      - ./scripts/persona_dml_maria.sql:/docker-entrypoint-initdb.d/02_persona_dml_maria.sql:ro
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    image: mongo:8.0
+    container_name: personapp-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./scripts/persona_ddl_mongo.js:/docker-entrypoint-initdb.d/01_persona_ddl_mongo.js:ro
+      - ./scripts/persona_dml_mongo.js:/docker-entrypoint-initdb.d/02_persona_dml_mongo.js:ro
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rest:
+    build:
+      context: .
+      target: rest
+    image: personapp-rest
+    container_name: personapp-rest
+    restart: on-failure
+    ports:
+      - "3000:3000"
+    environment: &app-env
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/persona_db
+      SPRING_MONGODB_URI: mongodb://persona_db:persona_db@mongodb:27017/persona_db?authSource=admin
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+
+  # Aplicacion de consola: no arranca con "up", se ejecuta con
+  #   docker compose run --rm cli
+  cli:
+    build:
+      context: .
+      target: cli
+    image: personapp-cli
+    profiles: ["cli"]
+    stdin_open: true
+    tty: true
+    environment: *app-env
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  mariadb_data:
+  mongodb_data:

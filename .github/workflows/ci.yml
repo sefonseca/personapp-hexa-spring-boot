@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Compilar (Maven)
+        run: mvn -B -DskipTests package
+
+      - name: Levantar MariaDB, MongoDB y la API con Docker Compose
+        run: docker compose up -d --build --wait
+
+      - name: Prueba de humo del CRUD (MARIA y MONGO)
+        run: |
+          for i in $(seq 1 60); do curl -sf http://localhost:3000/api-docs > /dev/null && break; sleep 2; done
+          bash scripts/smoke_test.sh | tee smoke.log
+          if grep -qE '^\[(5|000)' smoke.log; then echo "Hay respuestas 5xx o sin conexion"; exit 1; fi
+
+      - name: Logs de la API
+        if: always()
+        run: docker compose logs rest
+
+      - name: Apagar
+        if: always()
+        run: docker compose down -v
