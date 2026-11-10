@@ -18,7 +18,8 @@ services:
       retries: 10
 
   mongodb:
-    image: mongo:8.0
+    # MONGO_TAG permite elegir la version de MongoDB (README, seccion 13: kernel Linux 6.19+)
+    image: mongo:${MONGO_TAG:-8.0}
     container_name: personapp-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root

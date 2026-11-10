@@ -491,8 +491,27 @@ reciben los dos adaptadores de salida y, en cada petición, crean el caso de uso
 | `mvn no se reconoce como un comando` | Maven no está en el PATH o la terminal es anterior al cambio | Revise la [sección 5.1](#51-instalar-jdk-25-y-maven-windows) y abra una terminal nueva |
 | `release version 25 not supported` / `mvn -version` muestra otro Java | `JAVA_HOME` apunta a otro JDK | Haga que `JAVA_HOME` apunte a la carpeta del JDK 25 |
 | Errores de `getX()`/`setX()` en el IDE | Lombok no se está procesando | Active *Annotation Processing* (IntelliJ) o limpie el workspace de Java (VS Code) |
+| `personapp-mongodb exited (1)` y en `docker compose logs mongodb` aparece *Linux kernel versions 6.19 and newer has a known incompatibility* | MongoDB 8.x no arranca en kernels Linux 6.19 o más nuevos (Ubuntu 26.04, distribuciones recientes, runners de GitHub). Docker Desktop en Windows/macOS hoy usa un kernel anterior y no está afectado | Use MongoDB 7.0 LTS (ver abajo) |
 | Tildes raras en la CLI (Windows) | Página de códigos de la consola | `chcp 65001` antes de ejecutar |
 | `400` con "Invalid database option" | `database` distinto de `MARIA`/`MONGO` | Use `MARIA` o `MONGO` |
+
+### MongoDB en Linux con kernel 6.19 o superior
+
+MongoDB 8.x tiene una incompatibilidad conocida con los kernels Linux 6.19+ (issue
+[SERVER-121912](https://jira.mongodb.org/browse/SERVER-121912)) y todavía no hay versión corregida. Si su equipo
+la presenta (`uname -r` muestra 6.19 o mayor), levante el proyecto con MongoDB 7.0 LTS, que funciona igual con
+esta aplicación. La versión se elige con la variable `MONGO_TAG` (por defecto `8.0`):
+
+```bash
+docker compose down -v                    # los datos de 8.0 no se pueden abrir con 7.0
+MONGO_TAG=7.0 docker compose up -d --build                     # Linux / macOS / Git Bash
+```
+```powershell
+docker compose down -v
+$env:MONGO_TAG="7.0"; docker compose up -d --build             # PowerShell
+```
+
+El workflow de CI (`.github/workflows/ci.yml`) usa `MONGO_TAG=7.0` por este motivo.
 
 ---
 

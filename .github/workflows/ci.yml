@@ -9,6 +9,10 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      # Los runners de GitHub usan kernel Linux 6.19+, con el que MongoDB 8.x no arranca
+      # (incompatibilidad conocida de MongoDB, SERVER-121912). En CI se usa la LTS 7.0.
+      MONGO_TAG: "7.0"
     steps:
       - uses: actions/checkout@v5
 
