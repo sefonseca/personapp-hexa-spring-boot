@@ -1,0 +1,44 @@
+@startuml
+!include <C4/C4_Sequence>
+skinparam legendFontColor #222222
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #999999
+skinparam legendFontSize 12
+title Diagrama dinámico para PersonApp - API REST: crear una persona en MariaDB (POST /api/v1/persona)
+
+Person(usuario, "Usuario de la API", "Swagger UI o cliente HTTP")
+Container_Boundary(api, "API REST")
+  Component(ctrl, "PersonaControllerV1", "@RestController")
+  Component(inad, "PersonaInputAdapterRest", "@Adapter")
+  Component(mapr, "PersonaMapperRest", "@Mapper")
+  Component(uc, "PersonUseCase", "@UseCase")
+  Component(outad, "PersonOutputAdapterMaria", "@Adapter, JPA")
+  Component(repo, "PersonaRepositoryMaria", "JpaRepository")
+Boundary_End()
+ContainerDb(db, "Base de datos relacional", "MariaDB 12.3")
+
+Rel(usuario, ctrl, "1. POST con {dni, firstName, lastName, age, sex, database: MARIA}", "JSON/HTTP")
+Rel(ctrl, inad, "2. crearPersona(request)")
+Rel(inad, inad, "3. setPersonOutputPortInjection(MARIA): new PersonUseCase(adaptador MariaDB)")
+Rel(inad, mapr, "4. fromAdapterToDomain(request): valida y arma Person")
+Rel(inad, uc, "5. create(person) por el puerto de entrada")
+Rel(uc, outad, "6. findById(cc) por el puerto de salida")
+Rel(outad, repo, "7. findById(cc)")
+Rel(repo, db, "8. SELECT persona por cc", "JDBC")
+Rel(uc, outad, "9. save(person): no existe, se guarda")
+Rel(outad, repo, "10. save(PersonaEntity) (mapper Person a entidad)")
+Rel(repo, db, "11. INSERT persona", "JDBC")
+Rel(outad, uc, "12. Person guardada (mapper entidad a Person)")
+Rel(uc, inad, "13. Person")
+Rel(inad, ctrl, "14. PersonaResponse (fromDomainToAdapterRest)")
+Rel(ctrl, usuario, "15. 201 Created con la persona en JSON", "JSON/HTTP")
+
+legend right
+<b>Leyenda</b>
+|<#08427B>      | Persona (usuario del sistema) |
+|<#438DD5>      | Contenedor (base de datos) |
+|<#85BBF0>      | Componente (clase de la API REST) |
+| <b>⟶</b> | Mensaje numerado en orden; [ ] = protocolo |
+| <b>Nota</b> | Si el paso 6 encuentra la persona, el caso de uso lanza AlreadyExistException y GlobalExceptionHandler responde 409 Conflict |
+endlegend
+@enduml

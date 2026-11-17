@@ -1,0 +1,61 @@
+@startuml
+!include <C4/C4_Component>
+skinparam legendFontColor #222222
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #999999
+skinparam legendFontSize 12
+LAYOUT_TOP_DOWN()
+title Diagrama de componentes para PersonApp - API REST
+
+Person(usuarioApi, "Usuario de la API", "Consulta y administra datos desde Swagger UI o un cliente HTTP.")
+
+Container_Boundary(api, "API REST") {
+  Boundary(entrada, "Adaptador de entrada - módulo rest-input-adapter") {
+    Component(swagger, "Documentación OpenAPI", "springdoc-openapi 3.2", "Genera /api-docs y sirve Swagger UI en /swagger-ui.html a partir de los controladores.")
+    Component(controllers, "Controladores REST v1", "Spring MVC @RestController", "PersonaControllerV1, ProfesionControllerV1, TelefonoControllerV1 y EstudioControllerV1: reciben las peticiones de /api/v1 y responden con el código HTTP.")
+    Component(handler, "Manejador global de errores", "Spring @RestControllerAdvice", "GlobalExceptionHandler: convierte NoExist en 404, AlreadyExist en 409 y entradas inválidas en 400.")
+    Component(inAdapters, "Adaptadores de entrada REST", "Spring @Adapter y @Mapper", "PersonaInputAdapterRest y equivalentes: eligen MARIA o MONGO, crean el caso de uso en cada petición y convierten request y response en dominio.")
+  }
+  Boundary(nucleo, "Núcleo - módulos application y domain") {
+    Component(inPorts, "Puertos de entrada", "Interfaces Java @Port", "PersonInputPort, ProfessionInputPort, PhoneInputPort y StudyInputPort: operaciones que ofrece la aplicación.")
+    Component(useCases, "Casos de uso", "Clases Java @UseCase", "PersonUseCase, ProfessionUseCase, PhoneUseCase y StudyUseCase: reglas de negocio sobre el modelo de dominio (Person, Profession, Phone, Study).")
+    Component(outPorts, "Puertos de salida", "Interfaces Java", "PersonOutputPort, ProfessionOutputPort, PhoneOutputPort y StudyOutputPort: persistencia que necesita la aplicación.")
+  }
+  Boundary(salida, "Adaptadores de salida - módulos maria-output-adapter y mongo-output-adapter") {
+    Component(mariaAdapters, "Adaptadores de salida MariaDB", "Spring Data JPA, Hibernate 7", "PersonOutputAdapterMaria y equivalentes, con sus mappers, entidades JPA y JpaRepository.")
+    Component(mongoAdapters, "Adaptadores de salida MongoDB", "Spring Data MongoDB", "PersonOutputAdapterMongo y equivalentes, con sus mappers, documentos y MongoRepository; borran en cascada con MongoTemplate.")
+  }
+}
+
+ContainerDb(maria, "Base de datos relacional", "MariaDB 12.3", "Esquema persona_db.")
+ContainerDb(mongo, "Base de datos documental", "MongoDB 8.0", "Base persona_db.")
+
+Rel_D(usuarioApi, controllers, "Envía peticiones CRUD a", "JSON/HTTP")
+Rel_D(usuarioApi, swagger, "Explora y prueba la API en", "HTTP")
+Rel_R(controllers, handler, "Propagan las excepciones a")
+Rel_D(controllers, inAdapters, "Delegan cada operación a")
+Rel_D(inAdapters, inPorts, "Invocan operaciones de")
+Rel_L(useCases, inPorts, "Implementan")
+Rel_R(useCases, outPorts, "Guardan y consultan datos mediante")
+Rel_U(mariaAdapters, outPorts, "Implementan")
+Rel_U(mongoAdapters, outPorts, "Implementan")
+Rel(inAdapters, mariaAdapters, "Pasan al caso de uso cuando database = MARIA")
+Rel(inAdapters, mongoAdapters, "Pasan al caso de uso cuando database = MONGO")
+Rel_D(mariaAdapters, maria, "Leen y escriben en", "JDBC")
+Rel_D(mongoAdapters, mongo, "Leen y escriben en", "MongoDB Wire Protocol")
+
+Lay_R(inPorts, useCases)
+Lay_R(useCases, outPorts)
+Lay_R(mariaAdapters, mongoAdapters)
+Lay_D(outPorts, mariaAdapters)
+
+
+legend right
+<b>Leyenda</b>
+|<#08427B>      | Persona (usuario del sistema) |
+|<#438DD5>      | Contenedor: aplicación o base de datos (cilindro = base de datos) |
+|<#85BBF0>      | Componente |
+|<#FFFFFF>  - -  | Borde discontinuo: límite (sistema, contenedor o módulo Maven) |
+| <b>⟶</b> | Flecha: relación en un solo sentido; texto = intención, [ ] = tecnología o protocolo |
+endlegend
+@enduml

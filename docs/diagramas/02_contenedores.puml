@@ -1,0 +1,35 @@
+@startuml
+!include <C4/C4_Container>
+skinparam legendFontColor #222222
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #999999
+skinparam legendFontSize 12
+LAYOUT_TOP_DOWN()
+title Diagrama de contenedores para PersonApp
+
+Person(usuarioApi, "Usuario de la API", "Consulta y administra datos desde Swagger UI o un cliente HTTP.")
+Person(usuarioCli, "Usuario de consola", "Administra los datos desde la terminal.")
+
+System_Boundary(personapp, "PersonApp") {
+  Container(api, "API REST", "Java 25, Spring Boot 4.1, Spring MVC, springdoc", "Expone el CRUD de las 4 entidades en /api/v1 (puerto 3000) y su documentación OpenAPI en Swagger UI. Ejecutable: rest-input-adapter.jar.")
+  Container(cli, "Aplicación de consola", "Java 25, Spring Boot 4.1", "Ofrece el mismo CRUD mediante menús en la terminal. Ejecutable: cli-input-adapter.jar.")
+  ContainerDb(maria, "Base de datos relacional", "MariaDB 12.3", "Esquema persona_db: tablas persona, profesion, telefono y estudios.")
+  ContainerDb(mongo, "Base de datos documental", "MongoDB 8.0", "Base persona_db: colecciones persona, profesion, telefono y estudios.")
+}
+
+Rel(usuarioApi, api, "Envía peticiones CRUD a", "JSON/HTTP")
+Rel(usuarioCli, cli, "Elige opciones del menú en", "teclado/terminal")
+Rel(api, maria, "Lee y escribe datos cuando database = MARIA", "JDBC")
+Rel(api, mongo, "Lee y escribe datos cuando database = MONGO", "MongoDB Wire Protocol")
+Rel(cli, maria, "Lee y escribe datos cuando se elige MariaDB", "JDBC")
+Rel(cli, mongo, "Lee y escribe datos cuando se elige MongoDB", "MongoDB Wire Protocol")
+
+
+legend right
+<b>Leyenda</b>
+|<#08427B>      | Persona (usuario del sistema) |
+|<#438DD5>      | Contenedor: aplicación o base de datos (cilindro = base de datos) |
+|<#FFFFFF>  - -  | Borde discontinuo: límite (sistema, contenedor o módulo Maven) |
+| <b>⟶</b> | Flecha: relación en un solo sentido; texto = intención, [ ] = tecnología o protocolo |
+endlegend
+@enduml

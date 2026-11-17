@@ -1,0 +1,49 @@
+@startuml
+!include <C4/C4_Deployment>
+skinparam legendFontColor #222222
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #999999
+skinparam legendFontSize 12
+LAYOUT_TOP_DOWN()
+title Diagrama de despliegue para PersonApp - entorno local con Docker Compose
+
+Deployment_Node(pc, "Equipo del desarrollador", "Windows 11, macOS o Linux") {
+  Deployment_Node(browser, "Navegador web", "Chrome, Edge o Firefox: abre Swagger UI en localhost:3000/swagger-ui.html")
+  Deployment_Node(terminal, "Terminal", "PowerShell, CMD o Git Bash: docker compose run --rm cli")
+  Deployment_Node(docker, "Docker Engine", "Docker Desktop / Docker Engine con Compose v2") {
+    Deployment_Node(net, "Red personapp-hexa-spring-boot_default", "Red bridge de Docker") {
+      Deployment_Node(cRest, "personapp-rest", "Contenedor Docker: eclipse-temurin:25-jre") {
+        Container(api, "API REST", "Java 25, Spring Boot 4.1", "rest-input-adapter.jar; puerto 3000 publicado en localhost:3000.")
+      }
+      Deployment_Node(cCli, "cli (perfil cli)", "Contenedor Docker: eclipse-temurin:25-jre") {
+        Container(cliApp, "Aplicación de consola", "Java 25, Spring Boot 4.1", "cli-input-adapter.jar; se ejecuta bajo demanda.")
+      }
+      Deployment_Node(cMaria, "personapp-mariadb", "Contenedor Docker: mariadb:12.3") {
+        ContainerDb(maria, "Base de datos relacional", "MariaDB 12.3", "persona_db; puerto 3306 publicado en localhost:3307.")
+      }
+      Deployment_Node(cMongo, "personapp-mongodb", "Contenedor Docker: mongo:8.0 (MONGO_TAG)") {
+        ContainerDb(mongo, "Base de datos documental", "MongoDB 8.0", "persona_db; puerto 27017 publicado en localhost:27017.")
+      }
+    }
+    Deployment_Node(vMaria, "Volumen mariadb_data", "Volumen Docker")
+    Deployment_Node(vMongo, "Volumen mongodb_data", "Volumen Docker")
+  }
+}
+
+Rel_D(browser, api, "Carga Swagger UI y llama a los endpoints de", "JSON/HTTP, localhost:3000")
+Rel_D(terminal, cliApp, "Envía la entrada del teclado a", "TTY interactiva")
+Rel_D(api, maria, "Lee y escribe en", "JDBC, mariadb:3306")
+Rel_D(api, mongo, "Lee y escribe en", "MongoDB Wire Protocol, mongodb:27017")
+Rel(cliApp, maria, "Lee y escribe en", "JDBC")
+Rel(cliApp, mongo, "Lee y escribe en", "MongoDB Wire Protocol")
+Rel_D(maria, vMaria, "Persiste sus archivos en")
+Rel_D(mongo, vMongo, "Persiste sus archivos en")
+
+legend right
+<b>Leyenda</b>
+|<#FFFFFF>  ▭  | Nodo de despliegue (equipo, entorno de ejecución, contenedor Docker, red o volumen); se anidan |
+|<#438DD5>      | Instancia de contenedor C4: aplicación o base de datos (cilindro) |
+| <b>⟶</b> | Flecha: relación en un solo sentido; [ ] = protocolo y dirección |
+| <b>Nota</b> | Al crear las bases, scripts/*.sql y *.js se ejecutan desde docker-entrypoint-initdb.d |
+endlegend
+@enduml

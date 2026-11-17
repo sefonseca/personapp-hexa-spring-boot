@@ -1,0 +1,103 @@
+@startuml
+skinparam defaultFontName "Inter"
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam ArrowColor #666666
+skinparam ArrowFontColor #444444
+skinparam ArrowFontSize 12
+skinparam legendFontColor #222222
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #999999
+skinparam legendFontSize 12
+skinparam titleFontSize 16
+hide empty members
+skinparam class {
+  BackgroundColor #85BBF0
+  BorderColor #3C7FC0
+  FontColor #000000
+  AttributeFontColor #000000
+  StereotypeFontColor #333333
+}
+skinparam interface {
+  BackgroundColor #FFFFFF
+  BorderColor #3C7FC0
+}
+title Diagrama de código para el flujo de Persona (API REST, puertos y adaptadores de salida)
+
+package "rest-input-adapter" {
+  class PersonaControllerV1 <<@RestController>> {
+    + personas(database)
+    + buscarPersona(database, id)
+    + crearPersona(request)
+    + editarPersona(database, id, request)
+    + eliminarPersona(database, id)
+  }
+  class PersonaInputAdapterRest <<@Adapter>> {
+    - personOutputPortMaria : PersonOutputPort
+    - personOutputPortMongo : PersonOutputPort
+    - personaMapperRest : PersonaMapperRest
+    - setPersonOutputPortInjection(dbOption) : PersonInputPort
+    + historial(database)
+    + crearPersona(request)
+  }
+  class PersonaMapperRest <<@Mapper>> {
+    + fromAdapterToDomain(PersonaRequest) : Person
+    + fromDomainToAdapterRest(Person, database) : PersonaResponse
+  }
+}
+package "application" {
+  interface PersonInputPort <<@Port>> {
+    + create(Person) : Person
+    + edit(Integer, Person) : Person
+    + drop(Integer) : Boolean
+    + findAll() : List<Person>
+    + findOne(Integer) : Person
+    + count() : Integer
+    + getPhones(Integer) : List<Phone>
+    + getStudies(Integer) : List<Study>
+  }
+  class PersonUseCase <<@UseCase>> {
+    - personPersintence : PersonOutputPort
+  }
+  interface PersonOutputPort {
+    + save(Person) : Person
+    + delete(Integer) : Boolean
+    + find() : List<Person>
+    + findById(Integer) : Person
+  }
+}
+package "maria-output-adapter" {
+  class PersonOutputAdapterMaria <<@Adapter>> {
+    - personaRepositoryMaria : PersonaRepositoryMaria
+    - personaMapperMaria : PersonaMapperMaria
+  }
+  interface PersonaRepositoryMaria <<JpaRepository<PersonaEntity, Integer>>>
+}
+package "mongo-output-adapter" {
+  class PersonOutputAdapterMongo <<@Adapter>> {
+    - personaRepositoryMongo : PersonaRepositoryMongo
+    - personaMapperMongo : PersonaMapperMongo
+    - mongoTemplate : MongoTemplate
+  }
+  interface PersonaRepositoryMongo <<MongoRepository<PersonaDocument, Integer>>>
+}
+
+PersonaControllerV1 --> PersonaInputAdapterRest : delega en
+PersonaInputAdapterRest --> PersonaMapperRest : convierte con
+PersonaInputAdapterRest ..> PersonUseCase : crea por petición\nnew PersonUseCase(puerto)
+PersonInputPort <|.. PersonUseCase
+PersonUseCase --> PersonOutputPort : guarda y consulta mediante
+PersonOutputPort <|.. PersonOutputAdapterMaria
+PersonOutputPort <|.. PersonOutputAdapterMongo
+PersonOutputAdapterMaria --> PersonaRepositoryMaria : guarda con
+PersonOutputAdapterMongo --> PersonaRepositoryMongo : guarda con
+
+legend right
+<b>Leyenda (UML)</b>
+|<#85BBF0>      | Clase o interfaz; ícono C = clase, I = interfaz; «estereotipo» = anotación de Spring o propia (módulo common) |
+| <b>Flecha sólida</b> | Asociación: la clase guarda una referencia a la otra |
+| <b>Discontinua + triángulo</b> | Realización: la clase implementa la interfaz |
+| <b>Discontinua + flecha</b> | Dependencia: la clase crea o usa la otra de forma temporal |
+| <b>Carpeta</b> | Módulo Maven |
+endlegend
+@enduml

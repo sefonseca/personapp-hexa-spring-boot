@@ -1,0 +1,56 @@
+@startuml
+skinparam defaultFontName "Inter"
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam ArrowColor #666666
+skinparam ArrowFontColor #444444
+skinparam ArrowFontSize 12
+skinparam legendFontColor #222222
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #999999
+skinparam legendFontSize 12
+skinparam titleFontSize 16
+skinparam componentStyle rectangle
+skinparam rectangle {
+  BackgroundColor #85BBF0
+  BorderColor #3C7FC0
+  FontColor #000000
+}
+title Diagrama complementario de dependencias entre módulos Maven de PersonApp
+
+skinparam rectangle<<boundary>> {
+  BackgroundColor #FFFFFF
+  BorderColor #444444
+  BorderStyle dashed
+  FontColor #444444
+}
+rectangle "pom padre personapp-hexa-spring-boot\n[Maven, packaging pom: BOM Spring Boot 4.1.2, Java 25]" <<boundary>> as parent {
+  rectangle "<b>rest-input-adapter</b>\n[jar ejecutable]\nAPI REST + Swagger" as rest #438DD5
+  rectangle "<b>cli-input-adapter</b>\n[jar ejecutable]\nAplicación de consola" as cli #438DD5
+  rectangle "<b>maria-output-adapter</b>\n[jar]\nPersistencia JPA en MariaDB" as maria
+  rectangle "<b>mongo-output-adapter</b>\n[jar]\nPersistencia en MongoDB" as mongo
+  rectangle "<b>application</b>\n[jar]\nPuertos y casos de uso" as app
+  rectangle "<b>domain</b>\n[jar]\nModelo de dominio (POJO)" as domain
+  rectangle "<b>common</b>\n[jar]\nAnotaciones, excepciones, DatabaseOption" as common
+}
+
+rest --> maria : inyecta los adaptadores de
+rest --> mongo : inyecta los adaptadores de
+rest --> app : invoca puertos y crea casos de uso de
+cli --> maria : inyecta los adaptadores de
+cli --> mongo : inyecta los adaptadores de
+cli --> app : invoca puertos y crea casos de uso de
+maria --> app : implementa los puertos de salida de
+mongo --> app : implementa los puertos de salida de
+app --> domain : opera sobre el modelo de
+app --> common : usa anotaciones y excepciones de
+
+legend right
+<b>Leyenda</b>
+|<#438DD5>      | Módulo que se empaqueta como aplicación ejecutable (contenedor C4) |
+|<#85BBF0>      | Módulo librería (jar) que se incluye dentro de las aplicaciones |
+| <b>- -</b> | Borde discontinuo: proyecto padre; agrupa los módulos (<modules>) y fija versiones |
+| <b>⟶</b> | Dependencia declarada en el pom.xml (apunta al módulo requerido) |
+| <b>Nota</b> | domain no depende de ningún otro módulo; ninguna flecha sale del núcleo hacia un adaptador |
+endlegend
+@enduml

@@ -1,0 +1,69 @@
+@startuml
+skinparam defaultFontName "Inter"
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam ArrowColor #666666
+skinparam ArrowFontColor #444444
+skinparam ArrowFontSize 12
+skinparam legendFontColor #222222
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #999999
+skinparam legendFontSize 12
+skinparam titleFontSize 16
+hide empty members
+skinparam class {
+  BackgroundColor #85BBF0
+  BorderColor #3C7FC0
+  FontColor #000000
+  AttributeFontColor #000000
+  StereotypeFontColor #333333
+}
+title Diagrama de código para el modelo de dominio (módulo domain)
+
+class Person <<@Data>> {
+  - identification : Integer {NonNull}
+  - firstName : String {NonNull}
+  - lastName : String {NonNull}
+  - gender : Gender {NonNull}
+  - age : Integer
+  - phoneNumbers : List<Phone>
+  - studies : List<Study>
+  + isValidAge() : Boolean
+}
+class Profession <<@Data>> {
+  - identification : Integer {NonNull}
+  - name : String {NonNull}
+  - description : String
+  - studies : List<Study>
+}
+class Phone <<@Data>> {
+  - number : String {NonNull}
+  - company : String {NonNull}
+  - owner : Person {NonNull}
+}
+class Study <<@Data>> {
+  - person : Person {NonNull}
+  - profession : Profession {NonNull}
+  - graduationDate : LocalDate
+  - universityName : String
+}
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+Person "1" -- "0..*" Phone : tiene (phoneNumbers / owner)
+Person "1" -- "0..*" Study : cursa (studies / person)
+Profession "1" -- "0..*" Study : se estudia en (studies / profession)
+Person --> "1" Gender : gender
+
+legend right
+<b>Leyenda (UML)</b>
+|<#85BBF0>      | Clase del dominio; «@Data» = getters, setters, equals y toString generados por Lombok |
+| <b>C / E</b> | Ícono de clase (C) o de enumeración (E) |
+| <b>Línea</b> | Asociación con multiplicidad (1 = uno, 0..* = cero o más) |
+| <b>Flecha</b> | Navegación hacia el tipo que se usa (enum Gender) |
+| <b>{NonNull}</b> | Atributo obligatorio (Lombok @NonNull) |
+endlegend
+@enduml

@@ -462,6 +462,7 @@ personapp-hexa-spring-boot (pom padre)
 ├── cli-input-adapter      Adaptador de entrada de consola              -> aplicación ejecutable
 ├── scripts                DDL, DML y prueba automática
 ├── docs/HALLAZGOS.md      Errores encontrados en el template y su corrección
+├── docs/diagramas         Diagramas de arquitectura (modelo C4): fuentes .puml e imágenes .png
 ├── Dockerfile             Compilación multietapa (Maven + JDK 25 → JRE 25) de REST y CLI
 └── docker-compose.yml     MariaDB + MongoDB + API REST + CLI
 ```
@@ -469,12 +470,19 @@ personapp-hexa-spring-boot (pom padre)
 Dependencias entre módulos (la flecha indica "depende de"):
 
 ```
-rest-input-adapter ─┐                 ┌─> maria-output-adapter ─┐
-                    ├─> (ambos) ──────┤                         ├─> application ─> domain ─> common
-cli-input-adapter ──┘                 └─> mongo-output-adapter ─┘
+rest-input-adapter  ──> maria-output-adapter, mongo-output-adapter, application
+cli-input-adapter   ──> maria-output-adapter, mongo-output-adapter, application
+maria-output-adapter ─> application
+mongo-output-adapter ─> application
+application         ──> domain, common
+domain              ──> (ninguno)
+common              ──> (ninguno)
 ```
 
-El dominio y la aplicación no conocen JPA, MongoDB ni HTTP: solo conocen los puertos. Los adaptadores de entrada
+El dominio y la aplicación no conocen JPA, MongoDB ni HTTP: solo conocen los puertos. Los diagramas de la
+arquitectura (contexto, contenedores, componentes, código, dinámico y despliegue, según el
+[modelo C4](https://c4model.com/)) están en [`docs/diagramas`](docs/diagramas); se regeneran con
+`java -jar plantuml.jar -tpng docs/diagramas/*.puml`. Los adaptadores de entrada
 reciben los dos adaptadores de salida y, en cada petición, crean el caso de uso con el de la base pedida.
 
 ---

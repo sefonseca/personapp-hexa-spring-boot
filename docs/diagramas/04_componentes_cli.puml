@@ -1,0 +1,41 @@
+@startuml
+!include <C4/C4_Component>
+skinparam legendFontColor #222222
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #999999
+skinparam legendFontSize 12
+LAYOUT_TOP_DOWN()
+title Diagrama de componentes para PersonApp - Aplicación de consola
+
+Person(usuarioCli, "Usuario de consola", "Administra los datos desde la terminal.")
+
+Container_Boundary(cli, "Aplicación de consola") {
+  Boundary(entradaCli, "Adaptador de entrada - módulo cli-input-adapter") {
+    Component(main, "Arranque de la consola", "Spring Boot CommandLineRunner", "PersonAppCli: al iniciar, abre el menú principal.")
+    Component(menus, "Menús", "Clases Java (Scanner)", "MenuPrincipal, PersonaMenu, ProfesionMenu, TelefonoMenu y EstudioMenu; LectorConsola lee y valida cada línea.")
+    Component(inAdaptersCli, "Adaptadores de entrada de consola", "Spring @Adapter y @Mapper", "PersonaInputAdapterCli y equivalentes: eligen MARIA o MONGO, crean el caso de uso e imprimen los resultados.")
+  }
+  Component(core, "Núcleo de la aplicación", "Módulos application y domain", "Los mismos puertos de entrada, casos de uso y puertos de salida que usa la API REST.")
+  Component(outAdapters, "Adaptadores de salida", "Módulos maria-output-adapter y mongo-output-adapter", "Los mismos adaptadores MariaDB y MongoDB que usa la API REST.")
+}
+
+ContainerDb(maria, "Base de datos relacional", "MariaDB 12.3", "Esquema persona_db.")
+ContainerDb(mongo, "Base de datos documental", "MongoDB 8.0", "Base persona_db.")
+
+Rel_D(usuarioCli, menus, "Elige opciones y escribe datos en", "teclado/terminal")
+Rel_R(main, menus, "Inicia")
+Rel_R(menus, inAdaptersCli, "Llaman a")
+Rel_D(inAdaptersCli, core, "Invocan los puertos de entrada de")
+Rel_L(core, outAdapters, "Guarda y consulta datos, mediante los puertos de salida, con")
+Rel_D(outAdapters, maria, "Leen y escriben en", "JDBC")
+Rel_D(outAdapters, mongo, "Leen y escriben en", "MongoDB Wire Protocol")
+
+legend right
+<b>Leyenda</b>
+|<#08427B>      | Persona (usuario del sistema) |
+|<#438DD5>      | Contenedor: aplicación o base de datos (cilindro = base de datos) |
+|<#85BBF0>      | Componente |
+|<#FFFFFF>  - -  | Borde discontinuo: límite (contenedor o módulo Maven) |
+| <b>⟶</b> | Flecha: relación en un solo sentido; texto = intención, [ ] = tecnología o protocolo |
+endlegend
+@enduml

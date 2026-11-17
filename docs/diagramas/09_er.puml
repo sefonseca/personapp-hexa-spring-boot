@@ -1,0 +1,63 @@
+@startuml
+skinparam defaultFontName "Inter"
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam ArrowColor #666666
+skinparam ArrowFontColor #444444
+skinparam ArrowFontSize 12
+skinparam legendFontColor #222222
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #999999
+skinparam legendFontSize 12
+skinparam titleFontSize 16
+hide circle
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #85BBF0
+  BorderColor #3C7FC0
+  FontColor #000000
+  AttributeFontColor #000000
+}
+title Diagrama de código para el modelo de datos de MariaDB (esquema persona_db)
+
+entity "persona" as persona {
+  * cc : INT(15) <<PK>>
+  --
+  * nombre : VARCHAR(45)
+  * apellido : VARCHAR(45)
+  * genero : ENUM('M','F')
+  edad : INT(3)
+}
+entity "profesion" as profesion {
+  * id : INT(6) <<PK>>
+  --
+  * nom : VARCHAR(90)
+  des : TEXT
+}
+entity "telefono" as telefono {
+  * num : VARCHAR(15) <<PK>>
+  --
+  * oper : VARCHAR(45)
+  * duenio : INT(15) <<FK persona.cc>>
+}
+entity "estudios" as estudios {
+  * id_prof : INT(6) <<PK, FK profesion.id>>
+  * cc_per : INT(15) <<PK, FK persona.cc>>
+  --
+  fecha : DATE
+  univer : VARCHAR(50)
+}
+
+persona ||--o{ telefono : es dueño de
+persona ||--o{ estudios : cursa
+profesion ||--o{ estudios : se estudia en
+
+legend right
+<b>Leyenda</b>
+|<#85BBF0>      | Tabla |
+| <b>*</b> | Columna NOT NULL |
+| <b>PK / FK</b> | Llave primaria / llave foránea |
+| <b>Líneas</b> | Extremo con doble raya = exactamente uno; extremo con círculo y pata de gallo = cero o muchos |
+| <b>Nota</b> | En MongoDB las mismas entidades son las colecciones persona, profesion, telefono y estudios, con referencias por _id |
+endlegend
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Context>
+skinparam legendFontColor #222222
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #999999
+skinparam legendFontSize 12
+LAYOUT_TOP_DOWN()
+title Diagrama de contexto del sistema para PersonApp
+
+Person(usuarioApi, "Usuario de la API", "Desarrollador o sistema cliente que consulta y administra datos de personas desde Swagger UI o un cliente HTTP.")
+Person(usuarioCli, "Usuario de consola", "Persona que administra los mismos datos desde un menú en la terminal.")
+
+System(personapp, "PersonApp", "Permite crear, consultar, editar y eliminar personas, profesiones, teléfonos y estudios, guardándolos en MariaDB o en MongoDB según se elija en cada operación.")
+
+Rel(usuarioApi, personapp, "Administra personas, profesiones, teléfonos y estudios usando", "JSON/HTTP")
+Rel(usuarioCli, personapp, "Administra los mismos datos usando", "menú de consola")
+
+
+legend right
+<b>Leyenda</b>
+|<#08427B>      | Persona (usuario del sistema) |
+|<#1168BD>      | Sistema de software |
+| <b>⟶</b> | Flecha: relación en un solo sentido; texto = intención, [ ] = tecnología o protocolo |
+endlegend
+@enduml
