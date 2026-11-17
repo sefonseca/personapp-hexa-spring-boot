@@ -526,7 +526,7 @@ El workflow de CI (`.github/workflows/ci.yml`) usa `MONGO_TAG=7.0` por este moti
 ## Autores
 
 - Sebastián Fonseca
-- Samuel
-- Damián
+- Samuel Tovar
+- Damián Rey
 
 Profesor: Andrés Martín Sánchez – Arquitectura de Software, Pontificia Universidad Javeriana.
